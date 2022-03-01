@@ -99,7 +99,7 @@ int main(void)
 
 	/* Initialize all configured peripherals */
 	LCD_Init();
-	BSP_TS_Init(LCD_GetXSize(), LCD_GetYSize());
+	TS_Init(LCD_GetXSize(), LCD_GetYSize());
 //	Touchscreen_Calibration();
 
 	/* Clear the LCD */
@@ -191,7 +191,7 @@ static int GetTouchState (int* xCoord, int* yCoord) {
 	TS_StateTypeDef TsState;
 	int touchclick = 0;
 
-	BSP_TS_GetState(&TsState);
+	TS_GetState(&TsState);
 	if (TsState.TouchDetected) {
 		*xCoord = TsState.X;
 		*yCoord = TsState.Y;

@@ -99,7 +99,7 @@ static uint16_t          TsXBoundary, TsYBoundary;
   * @param  YSize: The maximum Y size of the TS area on LCD  
   * @retval TS_OK: if all initializations are OK. Other value if error.
   */
-uint8_t BSP_TS_Init(uint16_t XSize, uint16_t YSize)
+uint8_t TS_Init(uint16_t XSize, uint16_t YSize)
 {
   uint8_t ret = TS_ERROR;
 
@@ -130,7 +130,7 @@ uint8_t BSP_TS_Init(uint16_t XSize, uint16_t YSize)
   * @brief  Configures and enables the touch screen interrupts.
   * @retval TS_OK: if ITconfig is OK. Other value if error.
   */
-uint8_t BSP_TS_ITConfig(void)
+uint8_t TS_ITConfig(void)
 {
   /* Enable the TS ITs */
   TsDrv->EnableIT(TS_I2C_ADDRESS);
@@ -142,7 +142,7 @@ uint8_t BSP_TS_ITConfig(void)
   * @brief  Gets the TS IT status.
   * @retval Interrupt status.
   */  
-uint8_t BSP_TS_ITGetStatus(void)
+uint8_t TS_ITGetStatus(void)
 {
   /* Return the TS IT status */
   return (TsDrv->GetITStatus(TS_I2C_ADDRESS));
@@ -152,7 +152,7 @@ uint8_t BSP_TS_ITGetStatus(void)
   * @brief  Returns status and positions of the touch screen.
   * @param  TsState: Pointer to touch screen current state structure
   */
-void BSP_TS_GetState(TS_StateTypeDef* TsState)
+void TS_GetState(TS_StateTypeDef* TsState)
 {
   static uint32_t _x = 0, _y = 0;
   uint16_t xDiff, yDiff , x , y, xr, yr;
@@ -228,7 +228,7 @@ void BSP_TS_GetState(TS_StateTypeDef* TsState)
 /**
   * @brief  Clears all touch screen interrupts.
   */  
-void BSP_TS_ITClear(void)
+void TS_ITClear(void)
 {
   /* Clear TS IT pending bits */
   TsDrv->ClearIT(TS_I2C_ADDRESS); 

@@ -101,11 +101,11 @@ typedef enum
 /** @defgroup STM32F429I_DISCOVERY_TS_Exported_Functions STM32F429I DISCOVERY TS Exported Functions
   * @{
   */
-uint8_t BSP_TS_Init(uint16_t XSize, uint16_t YSize);
-void    BSP_TS_GetState(TS_StateTypeDef *TsState);
-uint8_t BSP_TS_ITConfig(void);
-uint8_t BSP_TS_ITGetStatus(void);
-void    BSP_TS_ITClear(void);
+uint8_t TS_Init(uint16_t XSize, uint16_t YSize);
+void    TS_GetState(TS_StateTypeDef *TsState);
+uint8_t TS_ITConfig(void);
+uint8_t TS_ITGetStatus(void);
+void    TS_ITClear(void);
 
 /**
   * @}
