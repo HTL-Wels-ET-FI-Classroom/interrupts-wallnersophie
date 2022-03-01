@@ -551,6 +551,10 @@ uint32_t BSP_LCD_ReadPixel(uint16_t Xpos, uint16_t Ypos)
 {
   uint32_t ret = 0;
   
+  if (Xpos > BSP_LCD_GetXSize() || Ypos > BSP_LCD_GetYSize()) {
+	return 0;
+  }
+
   if(LtdcHandler.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_ARGB8888)
   {
     /* Read data value from SDRAM memory */
@@ -694,6 +698,13 @@ void BSP_LCD_DisplayStringAtLine(uint16_t Line, uint8_t *ptr)
 void BSP_LCD_DrawHLine(uint16_t Xpos, uint16_t Ypos, uint16_t Length)
 {
   uint32_t xaddress = 0;
+
+  if (Xpos > BSP_LCD_GetXSize() || Ypos > BSP_LCD_GetYSize()) {
+	return;
+  }
+  if (Xpos + Length > BSP_LCD_GetXSize()) {
+	  Length = BSP_LCD_GetXSize() - Xpos;
+  }
   
   /* Get the line address */
   xaddress = (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress) + 4*(BSP_LCD_GetXSize()*Ypos + Xpos);
@@ -712,6 +723,12 @@ void BSP_LCD_DrawVLine(uint16_t Xpos, uint16_t Ypos, uint16_t Length)
 {
   uint32_t xaddress = 0;
   
+  if (Xpos > BSP_LCD_GetXSize() || Ypos > BSP_LCD_GetYSize()) {
+	return;
+  }
+  if (Ypos + Length > BSP_LCD_GetYSize()) {
+	  Length = BSP_LCD_GetYSize() - Ypos;
+  }
   /* Get the line address */
   xaddress = (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress) + 4*(BSP_LCD_GetXSize()*Ypos + Xpos);
   
@@ -976,6 +993,15 @@ void BSP_LCD_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Hei
 {
   uint32_t xaddress = 0;
 
+  if (Xpos > BSP_LCD_GetXSize() || Ypos > BSP_LCD_GetYSize()) {
+	return;
+  }
+  if (Xpos + Width > BSP_LCD_GetXSize()) {
+	  Width = BSP_LCD_GetXSize() - Xpos;
+  }
+  if (Ypos + Height > BSP_LCD_GetYSize()) {
+	  Height = BSP_LCD_GetYSize() - Ypos;
+  }
   /* Set the text color */
   BSP_LCD_SetTextColor(DrawProp[ActiveLayer].TextColor);
 
@@ -1324,6 +1350,9 @@ __weak void BSP_LCD_MspInit(void)
   */
 void BSP_LCD_DrawPixel(uint16_t Xpos, uint16_t Ypos, uint32_t RGB_Code)
 {
+	if (Xpos > BSP_LCD_GetXSize() || Ypos > BSP_LCD_GetYSize()) {
+		return;
+	}
   /* Write data value to all SDRAM memory */
   *(__IO uint32_t*) (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (4*(Ypos*BSP_LCD_GetXSize() + Xpos))) = RGB_Code;
 }
