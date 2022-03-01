@@ -72,6 +72,8 @@
 ------------------------------------------------------------------------------*/
 
 /* Includes ------------------------------------------------------------------*/
+#include <stdio.h>
+
 #include "stm32f429i_discovery_lcd.h"
 #include "../../../Utilities/Fonts/fonts.h"
 #include "../../../Utilities/Fonts/font24.c"
@@ -150,7 +152,7 @@ static void ConvertLineToARGB8888(void *pSrc, void *pDst, uint32_t xSize, uint32
   * @brief  Initializes the LCD.
   * @retval LCD state
   */
-uint8_t BSP_LCD_Init(void)
+uint8_t LCD_Init(void)
 { 
   /* On STM32F429I-DISCO, it is not possible to read ILI9341 ID because */
   /* PIN EXTC is not connected to VDD and then LCD_READ_ID4 is not accessible. */
@@ -211,7 +213,7 @@ uint8_t BSP_LCD_Init(void)
     LtdcHandler.Init.DEPolarity = LTDC_DEPOLARITY_AL;
     LtdcHandler.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
     
-    BSP_LCD_MspInit();
+    LCD_MspInit();
     HAL_LTDC_Init(&LtdcHandler); 
     
     /* Select the device */
@@ -224,24 +226,27 @@ uint8_t BSP_LCD_Init(void)
     BSP_SDRAM_Init();
 
     /* Initialize the font */
-    BSP_LCD_SetFont(&LCD_DEFAULT_FONT);
+    LCD_SetFont(&LCD_DEFAULT_FONT);
 
-	BSP_LCD_LayerDefaultInit(1, LCD_FRAME_BUFFER_LAYER1);
+	LCD_LayerDefaultInit(1, LCD_FRAME_BUFFER_LAYER1);
 	/* Set Foreground Layer */
-	BSP_LCD_SelectLayer(1);
+	LCD_SelectLayer(1);
 	/* Clear the LCD */
-	BSP_LCD_Clear(LCD_COLOR_WHITE);
-	BSP_LCD_SetColorKeying(1, LCD_COLOR_WHITE);
-	BSP_LCD_SetLayerVisible(1, DISABLE);
+	LCD_Clear(LCD_COLOR_WHITE);
+	LCD_SetColorKeying(1, LCD_COLOR_WHITE);
+	LCD_SetLayerVisible(1, DISABLE);
 
 	/* Layer1 Init */
-	BSP_LCD_LayerDefaultInit(0, LCD_FRAME_BUFFER_LAYER0);
+	LCD_LayerDefaultInit(0, LCD_FRAME_BUFFER_LAYER0);
 
 	/* Set Foreground Layer */
-	BSP_LCD_SelectLayer(0);
+	LCD_SelectLayer(0);
 
 	/* Enable The LCD */
-	BSP_LCD_DisplayOn();
+	LCD_DisplayOn();
+	// no buffering
+	setvbuf(stdout, NULL, _IONBF, 0);
+
 
   return LCD_OK;
 }  
@@ -250,7 +255,7 @@ uint8_t BSP_LCD_Init(void)
   * @brief  Gets the LCD X size.  
   * @retval The used LCD X size
   */
-uint32_t BSP_LCD_GetXSize(void)
+uint32_t LCD_GetXSize(void)
 {
   return LcdDrv->GetLcdPixelWidth();
 }
@@ -259,7 +264,7 @@ uint32_t BSP_LCD_GetXSize(void)
   * @brief  Gets the LCD Y size.  
   * @retval The used LCD Y size
   */
-uint32_t BSP_LCD_GetYSize(void)
+uint32_t LCD_GetYSize(void)
 {
   return LcdDrv->GetLcdPixelHeight();
 }
@@ -269,15 +274,15 @@ uint32_t BSP_LCD_GetYSize(void)
   * @param  LayerIndex: the layer foreground or background. 
   * @param  FB_Address: the layer frame buffer.
   */
-void BSP_LCD_LayerDefaultInit(uint16_t LayerIndex, uint32_t FB_Address)
+void LCD_LayerDefaultInit(uint16_t LayerIndex, uint32_t FB_Address)
 {     
   LCD_LayerCfgTypeDef   Layercfg;
 
  /* Layer Init */
   Layercfg.WindowX0 = 0;
-  Layercfg.WindowX1 = BSP_LCD_GetXSize();
+  Layercfg.WindowX1 = LCD_GetXSize();
   Layercfg.WindowY0 = 0;
-  Layercfg.WindowY1 = BSP_LCD_GetYSize(); 
+  Layercfg.WindowY1 = LCD_GetYSize(); 
   Layercfg.PixelFormat = LTDC_PIXEL_FORMAT_ARGB8888;
   Layercfg.FBStartAdress = FB_Address;
   Layercfg.Alpha = 255;
@@ -287,8 +292,8 @@ void BSP_LCD_LayerDefaultInit(uint16_t LayerIndex, uint32_t FB_Address)
   Layercfg.Backcolor.Red = 0;
   Layercfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_PAxCA;
   Layercfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_PAxCA;
-  Layercfg.ImageWidth = BSP_LCD_GetXSize();
-  Layercfg.ImageHeight = BSP_LCD_GetYSize();
+  Layercfg.ImageWidth = LCD_GetXSize();
+  Layercfg.ImageHeight = LCD_GetYSize();
   
   HAL_LTDC_ConfigLayer(&LtdcHandler, &Layercfg, LayerIndex); 
 
@@ -304,7 +309,7 @@ void BSP_LCD_LayerDefaultInit(uint16_t LayerIndex, uint32_t FB_Address)
   * @brief  Selects the LCD Layer.
   * @param  LayerIndex: the Layer foreground or background.
   */
-void BSP_LCD_SelectLayer(uint32_t LayerIndex)
+void LCD_SelectLayer(uint32_t LayerIndex)
 {
   ActiveLayer = LayerIndex;
 }
@@ -315,7 +320,7 @@ void BSP_LCD_SelectLayer(uint32_t LayerIndex)
   * @param  state: new state of the specified layer.
   *    This parameter can be: ENABLE or DISABLE.  
   */
-void BSP_LCD_SetLayerVisible(uint32_t LayerIndex, FunctionalState state)
+void LCD_SetLayerVisible(uint32_t LayerIndex, FunctionalState state)
 {
   if(state == ENABLE)
   {
@@ -337,7 +342,7 @@ void BSP_LCD_SetLayerVisible(uint32_t LayerIndex, FunctionalState state)
   *            @arg  DISABLE 
   * @retval None
   */
-void BSP_LCD_SetLayerVisible_NoReload(uint32_t LayerIndex, FunctionalState State)
+void LCD_SetLayerVisible_NoReload(uint32_t LayerIndex, FunctionalState State)
 {
   if(State == ENABLE)
   {
@@ -356,7 +361,7 @@ void BSP_LCD_SetLayerVisible_NoReload(uint32_t LayerIndex, FunctionalState State
   * @param  Transparency: the Transparency, 
   *    This parameter must range from 0x00 to 0xFF.
   */
-void BSP_LCD_SetTransparency(uint32_t LayerIndex, uint8_t Transparency)
+void LCD_SetTransparency(uint32_t LayerIndex, uint8_t Transparency)
 {     
   HAL_LTDC_SetAlpha(&LtdcHandler, Transparency, LayerIndex);
 }
@@ -368,7 +373,7 @@ void BSP_LCD_SetTransparency(uint32_t LayerIndex, uint8_t Transparency)
   *           This parameter must be a number between Min_Data = 0x00 and Max_Data = 0xFF 
   * @retval None
   */
-void BSP_LCD_SetTransparency_NoReload(uint32_t LayerIndex, uint8_t Transparency)
+void LCD_SetTransparency_NoReload(uint32_t LayerIndex, uint8_t Transparency)
 {    
   HAL_LTDC_SetAlpha_NoReload(&LtdcHandler, Transparency, LayerIndex);
 }
@@ -378,7 +383,7 @@ void BSP_LCD_SetTransparency_NoReload(uint32_t LayerIndex, uint8_t Transparency)
   * @param  LayerIndex: specifies the Layer foreground or background
   * @param  Address: new LCD frame buffer value      
   */
-void BSP_LCD_SetLayerAddress(uint32_t LayerIndex, uint32_t Address)
+void LCD_SetLayerAddress(uint32_t LayerIndex, uint32_t Address)
 {     
   HAL_LTDC_SetAddress(&LtdcHandler, Address, LayerIndex);
 }
@@ -389,7 +394,7 @@ void BSP_LCD_SetLayerAddress(uint32_t LayerIndex, uint32_t Address)
   * @param  Address: New LCD frame buffer value      
   * @retval None
   */
-void BSP_LCD_SetLayerAddress_NoReload(uint32_t LayerIndex, uint32_t Address)
+void LCD_SetLayerAddress_NoReload(uint32_t LayerIndex, uint32_t Address)
 {
   HAL_LTDC_SetAddress_NoReload(&LtdcHandler, Address, LayerIndex);
 }
@@ -402,7 +407,7 @@ void BSP_LCD_SetLayerAddress_NoReload(uint32_t LayerIndex, uint32_t Address)
   * @param  Width: LCD window width
   * @param  Height: LCD window height  
   */
-void BSP_LCD_SetLayerWindow(uint16_t LayerIndex, uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
+void LCD_SetLayerWindow(uint16_t LayerIndex, uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
 {
   /* reconfigure the layer size */
   HAL_LTDC_SetWindowSize(&LtdcHandler, Width, Height, LayerIndex);
@@ -420,7 +425,7 @@ void BSP_LCD_SetLayerWindow(uint16_t LayerIndex, uint16_t Xpos, uint16_t Ypos, u
   * @param  Height: LCD window height  
   * @retval None
   */
-void BSP_LCD_SetLayerWindow_NoReload(uint16_t LayerIndex, uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
+void LCD_SetLayerWindow_NoReload(uint16_t LayerIndex, uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
 {
   /* Reconfigure the layer size */
   HAL_LTDC_SetWindowSize_NoReload(&LtdcHandler, Width, Height, LayerIndex);
@@ -434,7 +439,7 @@ void BSP_LCD_SetLayerWindow_NoReload(uint16_t LayerIndex, uint16_t Xpos, uint16_
   * @param  LayerIndex: the Layer foreground or background
   * @param  RGBValue: the Color reference
   */
-void BSP_LCD_SetColorKeying(uint32_t LayerIndex, uint32_t RGBValue)
+void LCD_SetColorKeying(uint32_t LayerIndex, uint32_t RGBValue)
 {  
   /* Configure and Enable the color Keying for LCD Layer */
   HAL_LTDC_ConfigColorKeying(&LtdcHandler, RGBValue, LayerIndex);
@@ -447,7 +452,7 @@ void BSP_LCD_SetColorKeying(uint32_t LayerIndex, uint32_t RGBValue)
   * @param  RGBValue: Color reference
   * @retval None
   */
-void BSP_LCD_SetColorKeying_NoReload(uint32_t LayerIndex, uint32_t RGBValue)
+void LCD_SetColorKeying_NoReload(uint32_t LayerIndex, uint32_t RGBValue)
 {  
   /* Configure and Enable the color Keying for LCD Layer */
   HAL_LTDC_ConfigColorKeying_NoReload(&LtdcHandler, RGBValue, LayerIndex);
@@ -458,7 +463,7 @@ void BSP_LCD_SetColorKeying_NoReload(uint32_t LayerIndex, uint32_t RGBValue)
   * @brief  Disables the color Keying.
   * @param  LayerIndex: the Layer foreground or background
   */
-void BSP_LCD_ResetColorKeying(uint32_t LayerIndex)
+void LCD_ResetColorKeying(uint32_t LayerIndex)
 {
   /* Disable the color Keying for LCD Layer */
   HAL_LTDC_DisableColorKeying(&LtdcHandler, LayerIndex);
@@ -469,7 +474,7 @@ void BSP_LCD_ResetColorKeying(uint32_t LayerIndex)
   * @param  LayerIndex: Layer foreground or background
   * @retval None
   */
-void BSP_LCD_ResetColorKeying_NoReload(uint32_t LayerIndex)
+void LCD_ResetColorKeying_NoReload(uint32_t LayerIndex)
 {   
   /* Disable the color Keying for LCD Layer */
   HAL_LTDC_DisableColorKeying_NoReload(&LtdcHandler, LayerIndex);
@@ -482,7 +487,7 @@ void BSP_LCD_ResetColorKeying_NoReload(uint32_t LayerIndex)
   *         - LCD_RELOAD_VERTICAL_BLANKING
   * @retval None
   */
-void BSP_LCD_Relaod(uint32_t ReloadType)
+void LCD_Relaod(uint32_t ReloadType)
 {
   HAL_LTDC_Relaod (&LtdcHandler, ReloadType);
 }
@@ -491,7 +496,7 @@ void BSP_LCD_Relaod(uint32_t ReloadType)
   * @brief  Gets the LCD Text color.
   * @retval Text color
   */
-uint32_t BSP_LCD_GetTextColor(void)
+uint32_t LCD_GetTextColor(void)
 {
   return DrawProp[ActiveLayer].TextColor;
 }
@@ -500,7 +505,7 @@ uint32_t BSP_LCD_GetTextColor(void)
   * @brief  Gets the LCD Background color. 
   * @retval Background color  
   */
-uint32_t BSP_LCD_GetBackColor(void)
+uint32_t LCD_GetBackColor(void)
 {
   return DrawProp[ActiveLayer].BackColor;
 }
@@ -509,7 +514,7 @@ uint32_t BSP_LCD_GetBackColor(void)
   * @brief  Sets the Text color.
   * @param  Color: the Text color code ARGB(8-8-8-8)
   */
-void BSP_LCD_SetTextColor(uint32_t Color)
+void LCD_SetTextColor(uint32_t Color)
 {
   DrawProp[ActiveLayer].TextColor = Color;
 }
@@ -518,7 +523,7 @@ void BSP_LCD_SetTextColor(uint32_t Color)
   * @brief  Sets the Background color.
   * @param  Color: the layer Background color code ARGB(8-8-8-8)
   */
-void BSP_LCD_SetBackColor(uint32_t Color)
+void LCD_SetBackColor(uint32_t Color)
 {
   DrawProp[ActiveLayer].BackColor = Color;
 }
@@ -527,7 +532,7 @@ void BSP_LCD_SetBackColor(uint32_t Color)
   * @brief  Sets the Text Font.
   * @param  pFonts: the layer font to be used
   */
-void BSP_LCD_SetFont(sFONT *pFonts)
+void LCD_SetFont(sFONT *pFonts)
 {
   DrawProp[ActiveLayer].pFont = pFonts;
 }
@@ -536,7 +541,7 @@ void BSP_LCD_SetFont(sFONT *pFonts)
   * @brief  Gets the Text Font.
   * @retval Layer font
   */
-sFONT *BSP_LCD_GetFont(void)
+sFONT *LCD_GetFont(void)
 {
   return DrawProp[ActiveLayer].pFont;
 }
@@ -547,35 +552,35 @@ sFONT *BSP_LCD_GetFont(void)
   * @param  Ypos: the Y position 
   * @retval RGB pixel color
   */
-uint32_t BSP_LCD_ReadPixel(uint16_t Xpos, uint16_t Ypos)
+uint32_t LCD_ReadPixel(uint16_t Xpos, uint16_t Ypos)
 {
   uint32_t ret = 0;
   
-  if (Xpos > BSP_LCD_GetXSize() || Ypos > BSP_LCD_GetYSize()) {
+  if (Xpos > LCD_GetXSize() || Ypos > LCD_GetYSize()) {
 	return 0;
   }
 
   if(LtdcHandler.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_ARGB8888)
   {
     /* Read data value from SDRAM memory */
-    ret = *(__IO uint32_t*) (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (4*(Ypos*BSP_LCD_GetXSize() + Xpos)));
+    ret = *(__IO uint32_t*) (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (4*(Ypos*LCD_GetXSize() + Xpos)));
   }
   else if(LtdcHandler.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_RGB888)
   {
     /* Read data value from SDRAM memory */
-    ret = (*(__IO uint32_t*) (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (4*(Ypos*BSP_LCD_GetXSize() + Xpos))) & 0x00FFFFFF);
+    ret = (*(__IO uint32_t*) (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (4*(Ypos*LCD_GetXSize() + Xpos))) & 0x00FFFFFF);
   }
   else if((LtdcHandler.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_RGB565) || \
           (LtdcHandler.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_ARGB4444) || \
           (LtdcHandler.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_AL88))  
   {
     /* Read data value from SDRAM memory */
-    ret = *(__IO uint16_t*) (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (2*(Ypos*BSP_LCD_GetXSize() + Xpos)));    
+    ret = *(__IO uint16_t*) (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (2*(Ypos*LCD_GetXSize() + Xpos)));    
   }
   else
   {
     /* Read data value from SDRAM memory */
-    ret = *(__IO uint8_t*) (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (2*(Ypos*BSP_LCD_GetXSize() + Xpos)));    
+    ret = *(__IO uint8_t*) (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (2*(Ypos*LCD_GetXSize() + Xpos)));    
   }
 
   return ret;
@@ -585,26 +590,26 @@ uint32_t BSP_LCD_ReadPixel(uint16_t Xpos, uint16_t Ypos)
   * @brief  Clears the hole LCD.
   * @param  Color: the color of the background
   */
-void BSP_LCD_Clear(uint32_t Color)
+void LCD_Clear(uint32_t Color)
 { 
   /* Clear the LCD */ 
-  FillBuffer(ActiveLayer, (uint32_t *)(LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress), BSP_LCD_GetXSize(), BSP_LCD_GetYSize(), 0, Color);
+  FillBuffer(ActiveLayer, (uint32_t *)(LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress), LCD_GetXSize(), LCD_GetYSize(), 0, Color);
 }
 
 /**
   * @brief  Clears the selected line.
   * @param  Line: the line to be cleared
   */
-void BSP_LCD_ClearStringLine(uint32_t Line)
+void LCD_ClearStringLine(uint32_t Line)
 {
   uint32_t colorbackup = DrawProp[ActiveLayer].TextColor;
   DrawProp[ActiveLayer].TextColor = DrawProp[ActiveLayer].BackColor;
 
   /* Draw rectangle with background color */
-  BSP_LCD_FillRect(0, (Line * DrawProp[ActiveLayer].pFont->Height), BSP_LCD_GetXSize(), DrawProp[ActiveLayer].pFont->Height);
+  LCD_FillRect(0, (Line * DrawProp[ActiveLayer].pFont->Height), LCD_GetXSize(), DrawProp[ActiveLayer].pFont->Height);
   
   DrawProp[ActiveLayer].TextColor = colorbackup;
-  BSP_LCD_SetTextColor(DrawProp[ActiveLayer].TextColor);  
+  LCD_SetTextColor(DrawProp[ActiveLayer].TextColor);  
 }
 
 /**
@@ -613,7 +618,7 @@ void BSP_LCD_ClearStringLine(uint32_t Line)
   * @param  Ypos: the Line where to display the character shape
   * @param  Ascii: character ascii code, must be between 0x20 and 0x7E
   */
-void BSP_LCD_DisplayChar(uint16_t Xpos, uint16_t Ypos, uint8_t Ascii)
+void LCD_DisplayChar(uint16_t Xpos, uint16_t Ypos, uint8_t Ascii)
 {
   DrawChar(Xpos, Ypos, &DrawProp[ActiveLayer].pFont->table[(Ascii-' ') *\
               DrawProp[ActiveLayer].pFont->Height * ((DrawProp[ActiveLayer].pFont->Width + 7) / 8)]);
@@ -630,17 +635,17 @@ void BSP_LCD_DisplayChar(uint16_t Xpos, uint16_t Ypos, uint8_t Ascii)
   *                @arg RIGHT_MODE
   *                @arg LEFT_MODE   
   */
-void BSP_LCD_DisplayStringAt(uint16_t X, uint16_t Y, uint8_t *pText, Text_AlignModeTypdef mode)
+void LCD_DisplayStringAt(uint16_t X, uint16_t Y, char *pText, Text_AlignModeTypdef mode)
 {
   uint16_t refcolumn = 1, i = 0;
   uint32_t size = 0, xsize = 0; 
-  uint8_t  *ptr = pText;
+  char  *ptr = pText;
   
   /* Get the text size */
   while (*ptr++) size ++ ;
   
   /* Characters number per line */
-  xsize = (BSP_LCD_GetXSize()/DrawProp[ActiveLayer].pFont->Width);
+  xsize = (LCD_GetXSize()/DrawProp[ActiveLayer].pFont->Width);
   
   switch (mode)
   {
@@ -667,10 +672,10 @@ void BSP_LCD_DisplayStringAt(uint16_t X, uint16_t Y, uint8_t *pText, Text_AlignM
   }
 
   /* Send the string character by character on LCD */
-  while ((*pText != 0) & (((BSP_LCD_GetXSize() - (i*DrawProp[ActiveLayer].pFont->Width)) & 0xFFFF) >= DrawProp[ActiveLayer].pFont->Width))
+  while ((*pText != 0) & (((LCD_GetXSize() - (i*DrawProp[ActiveLayer].pFont->Width)) & 0xFFFF) >= DrawProp[ActiveLayer].pFont->Width))
   {
     /* Display one character on LCD */
-    BSP_LCD_DisplayChar(refcolumn, Y, *pText);
+    LCD_DisplayChar(refcolumn, Y, *pText);
     /* Decrement the column position by 16 */
     refcolumn += DrawProp[ActiveLayer].pFont->Width;
     /* Point on the next character */
@@ -684,9 +689,19 @@ void BSP_LCD_DisplayStringAt(uint16_t X, uint16_t Y, uint8_t *pText, Text_AlignM
   * @param  Line: the Line where to display the character shape
   * @param  ptr: pointer to string to display on LCD
   */
-void BSP_LCD_DisplayStringAtLine(uint16_t Line, uint8_t *ptr)
+void LCD_DisplayStringAtLine(uint16_t Line, char *ptr)
 {
-  BSP_LCD_DisplayStringAt(0, LINE(Line), ptr, LEFT_MODE);
+  LCD_DisplayStringAt(0, LINE(Line), ptr, LEFT_MODE);
+}
+
+/**
+  * @brief  Displays a maximum of 20 char on the LCD.
+  * @param  Line: the Line where to display the character shape
+  * @param  ptr: pointer to string to display on LCD
+  */
+void LCD_DisplayStringAtLineMode(uint16_t Line, char *ptr, Text_AlignModeTypdef mode)
+{
+  LCD_DisplayStringAt(0, LINE(Line), ptr, mode);
 }
 
 /**
@@ -695,19 +710,19 @@ void BSP_LCD_DisplayStringAtLine(uint16_t Line, uint8_t *ptr)
   * @param  Ypos: the Y position
   * @param  Length: line length
   */
-void BSP_LCD_DrawHLine(uint16_t Xpos, uint16_t Ypos, uint16_t Length)
+void LCD_DrawHLine(uint16_t Xpos, uint16_t Ypos, uint16_t Length)
 {
   uint32_t xaddress = 0;
 
-  if (Xpos > BSP_LCD_GetXSize() || Ypos > BSP_LCD_GetYSize()) {
+  if (Xpos > LCD_GetXSize() || Ypos > LCD_GetYSize()) {
 	return;
   }
-  if (Xpos + Length > BSP_LCD_GetXSize()) {
-	  Length = BSP_LCD_GetXSize() - Xpos;
+  if (Xpos + Length > LCD_GetXSize()) {
+	  Length = LCD_GetXSize() - Xpos;
   }
   
   /* Get the line address */
-  xaddress = (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress) + 4*(BSP_LCD_GetXSize()*Ypos + Xpos);
+  xaddress = (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress) + 4*(LCD_GetXSize()*Ypos + Xpos);
 
   /* Write line */
   FillBuffer(ActiveLayer, (uint32_t *)xaddress, Length, 1, 0, DrawProp[ActiveLayer].TextColor);
@@ -719,21 +734,21 @@ void BSP_LCD_DrawHLine(uint16_t Xpos, uint16_t Ypos, uint16_t Length)
   * @param  Ypos: the Y position
   * @param  Length: line length
   */
-void BSP_LCD_DrawVLine(uint16_t Xpos, uint16_t Ypos, uint16_t Length)
+void LCD_DrawVLine(uint16_t Xpos, uint16_t Ypos, uint16_t Length)
 {
   uint32_t xaddress = 0;
   
-  if (Xpos > BSP_LCD_GetXSize() || Ypos > BSP_LCD_GetYSize()) {
+  if (Xpos > LCD_GetXSize() || Ypos > LCD_GetYSize()) {
 	return;
   }
-  if (Ypos + Length > BSP_LCD_GetYSize()) {
-	  Length = BSP_LCD_GetYSize() - Ypos;
+  if (Ypos + Length > LCD_GetYSize()) {
+	  Length = LCD_GetYSize() - Ypos;
   }
   /* Get the line address */
-  xaddress = (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress) + 4*(BSP_LCD_GetXSize()*Ypos + Xpos);
+  xaddress = (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress) + 4*(LCD_GetXSize()*Ypos + Xpos);
   
   /* Write line */
-  FillBuffer(ActiveLayer, (uint32_t *)xaddress, 1, Length, (BSP_LCD_GetXSize() - 1), DrawProp[ActiveLayer].TextColor);
+  FillBuffer(ActiveLayer, (uint32_t *)xaddress, 1, Length, (LCD_GetXSize() - 1), DrawProp[ActiveLayer].TextColor);
 }
 
 /**
@@ -743,7 +758,7 @@ void BSP_LCD_DrawVLine(uint16_t Xpos, uint16_t Ypos, uint16_t Length)
   * @param  X2: the point 2 X position
   * @param  Y2: the point 2 Y position
   */
-void BSP_LCD_DrawLine(uint16_t X1, uint16_t Y1, uint16_t X2, uint16_t Y2)
+void LCD_DrawLine(uint16_t X1, uint16_t Y1, uint16_t X2, uint16_t Y2)
 {
   int16_t deltax = 0, deltay = 0, x = 0, y = 0, xinc1 = 0, xinc2 = 0, 
   yinc1 = 0, yinc2 = 0, den = 0, num = 0, numadd = 0, numpixels = 0, 
@@ -797,7 +812,7 @@ void BSP_LCD_DrawLine(uint16_t X1, uint16_t Y1, uint16_t X2, uint16_t Y2)
   
   for (curpixel = 0; curpixel <= numpixels; curpixel++)
   {
-    BSP_LCD_DrawPixel(x, y, DrawProp[ActiveLayer].TextColor);   /* Draw the current pixel */
+    LCD_DrawPixel(x, y, DrawProp[ActiveLayer].TextColor);   /* Draw the current pixel */
     num += numadd;                            /* Increase the numerator by the top of the fraction */
     if (num >= den)                           /* Check if numerator >= denominator */
     {
@@ -817,15 +832,15 @@ void BSP_LCD_DrawLine(uint16_t X1, uint16_t Y1, uint16_t X2, uint16_t Y2)
   * @param  Height: display rectangle height
   * @param  Width: display rectangle width
   */
-void BSP_LCD_DrawRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
+void LCD_DrawRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
 {
   /* Draw horizontal lines */
-  BSP_LCD_DrawHLine(Xpos, Ypos, Width);
-  BSP_LCD_DrawHLine(Xpos, (Ypos+ Height), Width);
+  LCD_DrawHLine(Xpos, Ypos, Width);
+  LCD_DrawHLine(Xpos, (Ypos+ Height), Width);
   
   /* Draw vertical lines */
-  BSP_LCD_DrawVLine(Xpos, Ypos, Height);
-  BSP_LCD_DrawVLine((Xpos + Width), Ypos, Height);
+  LCD_DrawVLine(Xpos, Ypos, Height);
+  LCD_DrawVLine((Xpos + Width), Ypos, Height);
 }
 
 /**
@@ -834,7 +849,7 @@ void BSP_LCD_DrawRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Hei
   * @param  Ypos: the Y position
   * @param  Radius: the circle radius
   */
-void BSP_LCD_DrawCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
+void LCD_DrawCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
 {
   int32_t  d;/* Decision Variable */ 
   uint32_t  curx;/* Current X Value */
@@ -846,14 +861,14 @@ void BSP_LCD_DrawCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
   
   while (curx <= cury)
   {
-    BSP_LCD_DrawPixel((Xpos + curx), (Ypos - cury), DrawProp[ActiveLayer].TextColor);
-    BSP_LCD_DrawPixel((Xpos - curx), (Ypos - cury), DrawProp[ActiveLayer].TextColor);
-    BSP_LCD_DrawPixel((Xpos + cury), (Ypos - curx), DrawProp[ActiveLayer].TextColor);
-    BSP_LCD_DrawPixel((Xpos - cury), (Ypos - curx), DrawProp[ActiveLayer].TextColor);
-    BSP_LCD_DrawPixel((Xpos + curx), (Ypos + cury), DrawProp[ActiveLayer].TextColor);
-    BSP_LCD_DrawPixel((Xpos - curx), (Ypos + cury), DrawProp[ActiveLayer].TextColor);
-    BSP_LCD_DrawPixel((Xpos + cury), (Ypos + curx), DrawProp[ActiveLayer].TextColor);
-    BSP_LCD_DrawPixel((Xpos - cury), (Ypos + curx), DrawProp[ActiveLayer].TextColor);   
+    LCD_DrawPixel((Xpos + curx), (Ypos - cury), DrawProp[ActiveLayer].TextColor);
+    LCD_DrawPixel((Xpos - curx), (Ypos - cury), DrawProp[ActiveLayer].TextColor);
+    LCD_DrawPixel((Xpos + cury), (Ypos - curx), DrawProp[ActiveLayer].TextColor);
+    LCD_DrawPixel((Xpos - cury), (Ypos - curx), DrawProp[ActiveLayer].TextColor);
+    LCD_DrawPixel((Xpos + curx), (Ypos + cury), DrawProp[ActiveLayer].TextColor);
+    LCD_DrawPixel((Xpos - curx), (Ypos + cury), DrawProp[ActiveLayer].TextColor);
+    LCD_DrawPixel((Xpos + cury), (Ypos + curx), DrawProp[ActiveLayer].TextColor);
+    LCD_DrawPixel((Xpos - cury), (Ypos + curx), DrawProp[ActiveLayer].TextColor);   
 
     if (d < 0)
     { 
@@ -873,7 +888,7 @@ void BSP_LCD_DrawCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
   * @param  Points: pointer to the points array
   * @param  PointCount: Number of points
   */
-void BSP_LCD_DrawPolygon(pPoint Points, uint16_t PointCount)
+void LCD_DrawPolygon(pPoint Points, uint16_t PointCount)
 {
   int16_t x = 0, y = 0;
 
@@ -882,14 +897,14 @@ void BSP_LCD_DrawPolygon(pPoint Points, uint16_t PointCount)
     return;
   }
 
-  BSP_LCD_DrawLine(Points->X, Points->Y, (Points+PointCount-1)->X, (Points+PointCount-1)->Y);
+  LCD_DrawLine(Points->X, Points->Y, (Points+PointCount-1)->X, (Points+PointCount-1)->Y);
   
   while(--PointCount)
   {
     x = Points->X;
     y = Points->Y;
     Points++;
-    BSP_LCD_DrawLine(x, y, Points->X, Points->Y);
+    LCD_DrawLine(x, y, Points->X, Points->Y);
   }
 }
 
@@ -900,7 +915,7 @@ void BSP_LCD_DrawPolygon(pPoint Points, uint16_t PointCount)
   * @param  XRadius: the X radius of ellipse
   * @param  YRadius: the Y radius of ellipse
   */
-void BSP_LCD_DrawEllipse(int Xpos, int Ypos, int XRadius, int YRadius)
+void LCD_DrawEllipse(int Xpos, int Ypos, int XRadius, int YRadius)
 {
   int x = 0, y = -YRadius, err = 2-2*XRadius, e2;
   float k = 0, rad1 = 0, rad2 = 0;
@@ -911,10 +926,10 @@ void BSP_LCD_DrawEllipse(int Xpos, int Ypos, int XRadius, int YRadius)
   k = (float)(rad2/rad1);
   
   do { 
-    BSP_LCD_DrawPixel((Xpos-(uint16_t)(x/k)), (Ypos+y), DrawProp[ActiveLayer].TextColor);
-    BSP_LCD_DrawPixel((Xpos+(uint16_t)(x/k)), (Ypos+y), DrawProp[ActiveLayer].TextColor);
-    BSP_LCD_DrawPixel((Xpos+(uint16_t)(x/k)), (Ypos-y), DrawProp[ActiveLayer].TextColor);
-    BSP_LCD_DrawPixel((Xpos-(uint16_t)(x/k)), (Ypos-y), DrawProp[ActiveLayer].TextColor);      
+    LCD_DrawPixel((Xpos-(uint16_t)(x/k)), (Ypos+y), DrawProp[ActiveLayer].TextColor);
+    LCD_DrawPixel((Xpos+(uint16_t)(x/k)), (Ypos+y), DrawProp[ActiveLayer].TextColor);
+    LCD_DrawPixel((Xpos+(uint16_t)(x/k)), (Ypos-y), DrawProp[ActiveLayer].TextColor);
+    LCD_DrawPixel((Xpos-(uint16_t)(x/k)), (Ypos-y), DrawProp[ActiveLayer].TextColor);      
     
     e2 = err;
     if (e2 <= x) {
@@ -932,7 +947,7 @@ void BSP_LCD_DrawEllipse(int Xpos, int Ypos, int XRadius, int YRadius)
   * @param  Y: the bmp Y position in the LCD
   * @param  pBmp: Bmp picture address in the internal Flash
   */
-void BSP_LCD_DrawBitmap(uint32_t X, uint32_t Y, uint8_t *pBmp)
+void LCD_DrawBitmap(uint32_t X, uint32_t Y, uint8_t *pBmp)
 {
   uint32_t index = 0, width = 0, height = 0, bitpixel = 0;
   uint32_t address;
@@ -951,7 +966,7 @@ void BSP_LCD_DrawBitmap(uint32_t X, uint32_t Y, uint8_t *pBmp)
   bitpixel = pBmp[28] + (pBmp[29] << 8);   
  
   /* Set Address */
-  address = LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (((BSP_LCD_GetXSize()*Y) + X)*(4));
+  address = LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (((LCD_GetXSize()*Y) + X)*(4));
 
   /* Get the Layer pixel format */    
   if ((bitpixel/8) == 4)
@@ -977,7 +992,7 @@ void BSP_LCD_DrawBitmap(uint32_t X, uint32_t Y, uint8_t *pBmp)
   ConvertLineToARGB8888((uint32_t *)pBmp, (uint32_t *)address, width, inputcolormode);
 
   /* Increment the source and destination buffers */
-  address+=  ((BSP_LCD_GetXSize() - width + width)*4);
+  address+=  ((LCD_GetXSize() - width + width)*4);
   pBmp -= width*(bitpixel/8);
   }
 }
@@ -989,27 +1004,27 @@ void BSP_LCD_DrawBitmap(uint32_t X, uint32_t Y, uint8_t *pBmp)
   * @param  Height: rectangle height
   * @param  Width: rectangle width
   */
-void BSP_LCD_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
+void LCD_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
 {
   uint32_t xaddress = 0;
 
-  if (Xpos > BSP_LCD_GetXSize() || Ypos > BSP_LCD_GetYSize()) {
+  if (Xpos > LCD_GetXSize() || Ypos > LCD_GetYSize()) {
 	return;
   }
-  if (Xpos + Width > BSP_LCD_GetXSize()) {
-	  Width = BSP_LCD_GetXSize() - Xpos;
+  if (Xpos + Width > LCD_GetXSize()) {
+	  Width = LCD_GetXSize() - Xpos;
   }
-  if (Ypos + Height > BSP_LCD_GetYSize()) {
-	  Height = BSP_LCD_GetYSize() - Ypos;
+  if (Ypos + Height > LCD_GetYSize()) {
+	  Height = LCD_GetYSize() - Ypos;
   }
   /* Set the text color */
-  BSP_LCD_SetTextColor(DrawProp[ActiveLayer].TextColor);
+  LCD_SetTextColor(DrawProp[ActiveLayer].TextColor);
 
   /* Get the rectangle start address */
-  xaddress = (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress) + 4*(BSP_LCD_GetXSize()*Ypos + Xpos);
+  xaddress = (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress) + 4*(LCD_GetXSize()*Ypos + Xpos);
 
   /* Fill the rectangle */
-  FillBuffer(ActiveLayer, (uint32_t *)xaddress, Width, Height, (BSP_LCD_GetXSize() - Width), DrawProp[ActiveLayer].TextColor);
+  FillBuffer(ActiveLayer, (uint32_t *)xaddress, Width, Height, (LCD_GetXSize() - Width), DrawProp[ActiveLayer].TextColor);
 }
 
 /**
@@ -1018,7 +1033,7 @@ void BSP_LCD_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Hei
   * @param  Ypos: the Y position
   * @param  Radius: the circle radius
   */
-void BSP_LCD_FillCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
+void LCD_FillCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
 {
   int32_t  d;    /* Decision Variable */ 
   uint32_t  curx;/* Current X Value */
@@ -1029,20 +1044,20 @@ void BSP_LCD_FillCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
   curx = 0;
   cury = Radius;
   
-  BSP_LCD_SetTextColor(DrawProp[ActiveLayer].TextColor);
+  LCD_SetTextColor(DrawProp[ActiveLayer].TextColor);
 
   while (curx <= cury)
   {
     if(cury > 0) 
     {
-      BSP_LCD_DrawHLine(Xpos - cury, Ypos + curx, 2*cury);
-      BSP_LCD_DrawHLine(Xpos - cury, Ypos - curx, 2*cury);
+      LCD_DrawHLine(Xpos - cury, Ypos + curx, 2*cury);
+      LCD_DrawHLine(Xpos - cury, Ypos - curx, 2*cury);
     }
 
     if(curx > 0) 
     {
-      BSP_LCD_DrawHLine(Xpos - curx, Ypos - cury, 2*curx);
-      BSP_LCD_DrawHLine(Xpos - curx, Ypos + cury, 2*curx);
+      LCD_DrawHLine(Xpos - curx, Ypos - cury, 2*curx);
+      LCD_DrawHLine(Xpos - curx, Ypos + cury, 2*curx);
     }
     if (d < 0)
     { 
@@ -1056,8 +1071,8 @@ void BSP_LCD_FillCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
     curx++;
   }
 
-  BSP_LCD_SetTextColor(DrawProp[ActiveLayer].TextColor);
-  BSP_LCD_DrawCircle(Xpos, Ypos, Radius);
+  LCD_SetTextColor(DrawProp[ActiveLayer].TextColor);
+  LCD_DrawCircle(Xpos, Ypos, Radius);
 }
 
 /**
@@ -1069,7 +1084,7 @@ void BSP_LCD_FillCircle(uint16_t Xpos, uint16_t Ypos, uint16_t Radius)
   * @param  X3: the point 3 x position
   * @param  Y3: the point 3 y position
   */
-void BSP_LCD_FillTriangle(uint16_t X1, uint16_t X2, uint16_t X3, uint16_t Y1, uint16_t Y2, uint16_t Y3)
+void LCD_FillTriangle(uint16_t X1, uint16_t X2, uint16_t X3, uint16_t Y1, uint16_t Y2, uint16_t Y3)
 { 
   int16_t deltax = 0, deltay = 0, x = 0, y = 0, xinc1 = 0, xinc2 = 0, 
   yinc1 = 0, yinc2 = 0, den = 0, num = 0, numadd = 0, numpixels = 0, 
@@ -1123,7 +1138,7 @@ void BSP_LCD_FillTriangle(uint16_t X1, uint16_t X2, uint16_t X3, uint16_t Y1, ui
   
   for (curpixel = 0; curpixel <= numpixels; curpixel++)
   {
-    BSP_LCD_DrawLine(x, y, X3, Y3);
+    LCD_DrawLine(x, y, X3, Y3);
     
     num += numadd;              /* Increase the numerator by the top of the fraction */
     if (num >= den)             /* Check if numerator >= denominator */
@@ -1142,7 +1157,7 @@ void BSP_LCD_FillTriangle(uint16_t X1, uint16_t X2, uint16_t X3, uint16_t Y1, ui
   * @param  Points: pointer to the points array
   * @param  PointCount: Number of points
   */
-void BSP_LCD_FillPolygon(pPoint Points, uint16_t PointCount)
+void LCD_FillPolygon(pPoint Points, uint16_t PointCount)
 {
   
   int16_t x = 0, y = 0, x2 = 0, y2 = 0, xcenter = 0, ycenter = 0, xfirst = 0, yfirst = 0, pixelx = 0, pixely = 0, counter = 0;
@@ -1193,14 +1208,14 @@ void BSP_LCD_FillPolygon(pPoint Points, uint16_t PointCount)
     x2 = Points->X;
     y2 = Points->Y;    
   
-    BSP_LCD_FillTriangle(x, x2, xcenter, y, y2, ycenter);
-    BSP_LCD_FillTriangle(x, xcenter, x2, y, ycenter, y2);
-    BSP_LCD_FillTriangle(xcenter, x2, x, ycenter, y2, y);   
+    LCD_FillTriangle(x, x2, xcenter, y, y2, ycenter);
+    LCD_FillTriangle(x, xcenter, x2, y, ycenter, y2);
+    LCD_FillTriangle(xcenter, x2, x, ycenter, y2, y);   
   }
   
-  BSP_LCD_FillTriangle(xfirst, x2, xcenter, yfirst, y2, ycenter);
-  BSP_LCD_FillTriangle(xfirst, xcenter, x2, yfirst, ycenter, y2);
-  BSP_LCD_FillTriangle(xcenter, x2, xfirst, ycenter, y2, yfirst);   
+  LCD_FillTriangle(xfirst, x2, xcenter, yfirst, y2, ycenter);
+  LCD_FillTriangle(xfirst, xcenter, x2, yfirst, ycenter, y2);
+  LCD_FillTriangle(xcenter, x2, xfirst, ycenter, y2, yfirst);   
 }
 
 /**
@@ -1210,7 +1225,7 @@ void BSP_LCD_FillPolygon(pPoint Points, uint16_t PointCount)
   * @param  XRadius: X radius of ellipse
   * @param  YRadius: Y radius of ellipse. 
   */
-void BSP_LCD_FillEllipse(int Xpos, int Ypos, int XRadius, int YRadius)
+void LCD_FillEllipse(int Xpos, int Ypos, int XRadius, int YRadius)
 {
   int x = 0, y = -YRadius, err = 2-2*XRadius, e2;
   float K = 0, rad1 = 0, rad2 = 0;
@@ -1221,8 +1236,8 @@ void BSP_LCD_FillEllipse(int Xpos, int Ypos, int XRadius, int YRadius)
   
   do 
   { 
-    BSP_LCD_DrawHLine((Xpos-(uint16_t)(x/K)), (Ypos+y), (2*(uint16_t)(x/K) + 1));
-    BSP_LCD_DrawHLine((Xpos-(uint16_t)(x/K)), (Ypos-y), (2*(uint16_t)(x/K) + 1));
+    LCD_DrawHLine((Xpos-(uint16_t)(x/K)), (Ypos+y), (2*(uint16_t)(x/K) + 1));
+    LCD_DrawHLine((Xpos-(uint16_t)(x/K)), (Ypos-y), (2*(uint16_t)(x/K) + 1));
     
     e2 = err;
     if (e2 <= x) 
@@ -1238,7 +1253,7 @@ void BSP_LCD_FillEllipse(int Xpos, int Ypos, int XRadius, int YRadius)
 /**
   * @brief  Enables the Display.
   */
-void BSP_LCD_DisplayOn(void)
+void LCD_DisplayOn(void)
 {
   if(LcdDrv->DisplayOn != NULL)
   {
@@ -1249,7 +1264,7 @@ void BSP_LCD_DisplayOn(void)
 /**
   * @brief  Disables the Display.
   */
-void BSP_LCD_DisplayOff(void)
+void LCD_DisplayOff(void)
 {
   if(LcdDrv->DisplayOff != NULL)
   {
@@ -1264,7 +1279,7 @@ void BSP_LCD_DisplayOff(void)
 /**
   * @brief  Initializes the LTDC MSP.
   */
-__weak void BSP_LCD_MspInit(void)
+__weak void LCD_MspInit(void)
 {
   GPIO_InitTypeDef GPIO_InitStructure;
   
@@ -1348,13 +1363,13 @@ __weak void BSP_LCD_MspInit(void)
   * @param  Ypos: the Y position
   * @param  RGB_Code: the pixel color in ARGB mode (8-8-8-8)  
   */
-void BSP_LCD_DrawPixel(uint16_t Xpos, uint16_t Ypos, uint32_t RGB_Code)
+void LCD_DrawPixel(uint16_t Xpos, uint16_t Ypos, uint32_t RGB_Code)
 {
-	if (Xpos > BSP_LCD_GetXSize() || Ypos > BSP_LCD_GetYSize()) {
+	if (Xpos > LCD_GetXSize() || Ypos > LCD_GetYSize()) {
 		return;
 	}
   /* Write data value to all SDRAM memory */
-  *(__IO uint32_t*) (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (4*(Ypos*BSP_LCD_GetXSize() + Xpos))) = RGB_Code;
+  *(__IO uint32_t*) (LtdcHandler.LayerCfg[ActiveLayer].FBStartAdress + (4*(Ypos*LCD_GetXSize() + Xpos))) = RGB_Code;
 }
 
 /**
@@ -1400,11 +1415,11 @@ static void DrawChar(uint16_t Xpos, uint16_t Ypos, const uint8_t *c)
     {
       if(line & (1 << (width- j + offset- 1))) 
       {
-        BSP_LCD_DrawPixel((Xpos + j), Ypos, DrawProp[ActiveLayer].TextColor);
+        LCD_DrawPixel((Xpos + j), Ypos, DrawProp[ActiveLayer].TextColor);
       }
       else
       {
-        BSP_LCD_DrawPixel((Xpos + j), Ypos, DrawProp[ActiveLayer].BackColor);
+        LCD_DrawPixel((Xpos + j), Ypos, DrawProp[ActiveLayer].BackColor);
       } 
     }
     Ypos++;
@@ -1479,6 +1494,83 @@ static void ConvertLineToARGB8888(void * pSrc, void * pDst, uint32_t xSize, uint
     }
   } 
 }
+
+/**
+  * @brief  Sets the LCD Text and Background colors.
+  * @param  TextColor: specifies the Text Color.
+  * @param  BackColor: specifies the Background Color.
+  * @retval None
+  */
+void LCD_SetColors(uint32_t TextColor, uint32_t BackColor)
+{
+  LCD_SetTextColor(TextColor);
+  LCD_SetBackColor(BackColor);
+}
+
+static unsigned int  Line=0;
+static unsigned int  Column=0;
+#define COLUMN(x) ((x) * (((sFONT *)LCD_GetFont())->Width))
+
+
+#define MAX_LINE		 ((320/(((sFONT *)LCD_GetFont())->Height))-1)
+#define MAX_COLUMN	 ((240/(((sFONT *)LCD_GetFont())->Width))-1)
+
+void LCD_SetPrintPosition(unsigned int ln, unsigned int col)
+{
+	Line 		= ( ln <= MAX_LINE )? ln : MAX_LINE;
+	Column 	= ( col <= MAX_COLUMN ) ? col : MAX_COLUMN;
+}
+
+int __io_putchar(int ch)
+{
+ fputc(ch, stdout);
+ return ch;
+}
+
+int _write(int file,char *ptr, int len)
+{
+ int DataIdx;
+ for(DataIdx= 0; DataIdx< len; DataIdx++)
+ {
+ __io_putchar(*ptr++);
+ }
+return len;
+}
+
+int fputc(int ch, FILE *f)
+{
+	if( (char)ch == '\n' )
+	{
+		if( Line < MAX_LINE )
+		{
+			Line++;
+		}
+		Column = 0;
+		return(0);
+	}
+	if( (char)ch == '\r' )
+	{
+		Column = 0;
+		return(0);
+	}
+
+
+	LCD_DisplayChar(COLUMN(Column), LINE(Line), ch);
+
+
+	if( Column >= MAX_COLUMN &&	Line < MAX_LINE )
+	{
+		Line++;
+		Column=0;
+	}
+	else
+	{
+		Column++;
+	}
+
+	return (0);
+}
+
 
 /**
   * @}

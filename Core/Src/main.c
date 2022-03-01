@@ -11,6 +11,9 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "main.h"
 #include "stm32f429i_discovery_lcd.h"
 #include "stm32f429i_discovery_ts.h"
@@ -44,7 +47,7 @@ void SysTick_Handler(void)
 static void drawLine(int x, int y) {
   int x2 = rand() % 240 + 1;
   int y2 = rand() % 320 + 1;
-  BSP_LCD_DrawLine(x, y, x2, y2);
+  LCD_DrawLine(x, y, x2, y2);
 
 }
 
@@ -56,7 +59,7 @@ static void drawLine(int x, int y) {
  */
 static void drawCircle(int x, int y) {
   int r = rand() % 30 + 1;
-  BSP_LCD_DrawCircle(x, y, r);
+  LCD_DrawCircle(x, y, r);
 }
 
 /**
@@ -68,7 +71,7 @@ static void drawCircle(int x, int y) {
 static void drawEllipse(int x, int y) {
   int r1 = rand() % 30 + 1;
   int r2 = rand() % 30 + 1;
-  BSP_LCD_FillEllipse(x, y, r1, r2);
+  LCD_FillEllipse(x, y, r1, r2);
 }
 
 /**
@@ -80,7 +83,7 @@ static void drawEllipse(int x, int y) {
 static void drawRectangle(int x, int y) {
   int h = rand() % 50 + 1;
   int w = rand() % 50 + 1;
-  BSP_LCD_FillRect(x, y, h, w);
+  LCD_FillRect(x, y, h, w);
 }
 /**
  * @brief  The application entry point.
@@ -95,17 +98,27 @@ int main(void)
 	SystemClock_Config();
 
 	/* Initialize all configured peripherals */
-	BSP_LCD_Init();
-	BSP_TS_Init(BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
+	LCD_Init();
+	BSP_TS_Init(LCD_GetXSize(), LCD_GetYSize());
 //	Touchscreen_Calibration();
 
 	/* Clear the LCD */
-	BSP_LCD_Clear(LCD_COLOR_WHITE);
-	BSP_LCD_SetTextColor(LCD_COLOR_RED);
-	//BSP_LCD_SetBackColor(LCD_COLOR_BLACK);
-	BSP_LCD_FillCircle(50, 50, 20);
-	BSP_LCD_SetTextColor(LCD_COLOR_BLUE);
-	BSP_LCD_FillRect(50, 100, 40, 20);
+	LCD_Clear(LCD_COLOR_BLACK);
+	LCD_SetTextColor(LCD_COLOR_YELLOW);
+	LCD_SetBackColor(LCD_COLOR_BLACK);
+	LCD_SetColors(LCD_COLOR_YELLOW, LCD_COLOR_BLACK); // TextColor, BackColor
+	LCD_SetFont(&Font20);
+	// There are 2 ways to print text to screen: using printf or LCD_ functions
+	LCD_DisplayStringAt(0, 0, "HTBLA Wels", CENTER_MODE);
+	// printf Alternative
+	LCD_SetPrintPosition(1, 0);
+	printf(" Fischergasse 30");
+	LCD_SetPrintPosition(2, 0);
+	printf("   A-4600 Wels");
+
+	LCD_SetFont(&Font8);
+	LCD_SetColors(LCD_COLOR_MAGENTA, LCD_COLOR_BLACK); // TextColor, BackColor
+	LCD_DisplayStringAtLineMode(39, "copyright xyz", CENTER_MODE);
 
 
 	/* Infinite loop */
@@ -131,7 +144,7 @@ int main(void)
 	    if (drawShape) {
 	      drawShape = 0;
 	      int c = rand() | 0xFF000000; // set alpha channel to FF
-	      BSP_LCD_SetTextColor(c);
+	      LCD_SetTextColor(c);
 	      int s = rand() % 4;
 	      switch (s) {
 	        case 0:
