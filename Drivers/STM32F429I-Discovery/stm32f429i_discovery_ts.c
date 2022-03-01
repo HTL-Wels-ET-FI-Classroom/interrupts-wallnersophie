@@ -164,7 +164,7 @@ void BSP_TS_GetState(TS_StateTypeDef* TsState)
     TsDrv->GetXY(TS_I2C_ADDRESS, &x, &y);
     
     /* Y value first correction */
-    y -= 360;  
+//    y -= 360;
     
     /* Y value second correction */
     yr = y / 11;
@@ -180,7 +180,7 @@ void BSP_TS_GetState(TS_StateTypeDef* TsState)
     }
     else
     {}
-    y = yr;
+    y = TsYBoundary - yr;
     
     /* X value first correction */
     if(x <= 3000)
