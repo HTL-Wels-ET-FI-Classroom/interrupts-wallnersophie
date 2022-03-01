@@ -40,53 +40,6 @@ void SysTick_Handler(void)
 }
 
 /**
- * @brief draw a random line at coordinates
- * @param x x-coordinate where line starts
- * @param y y-coordinate where line starts
- * @return none
- */
-static void drawLine(int x, int y) {
-	int x2 = rand() % 240 + 1;
-	int y2 = rand() % 320 + 1;
-	LCD_DrawLine(x, y, x2, y2);
-
-}
-
-/**
- * @brief draw a random circle at coordinates
- * @param x x-coordinate of circle center
- * @param y y-coordinate of cirlce center
- * @return none
- */
-static void drawCircle(int x, int y) {
-	int r = rand() % 30 + 1;
-	LCD_DrawCircle(x, y, r);
-}
-
-/**
- * @brief draw a random ellipsis at coordinates
- * @param x x-coordinate of ellipsis center
- * @param y y-coordinate of ellipsis center
- * @return none
- */
-static void drawEllipse(int x, int y) {
-	int r1 = rand() % 30 + 1;
-	int r2 = rand() % 30 + 1;
-	LCD_FillEllipse(x, y, r1, r2);
-}
-
-/**
- * @brief draw a random rectangle at coordinates
- * @param x x-coordinate where rectangle starts
- * @param y y-coordinate where rectangle starts
- * @return none
- */
-static void drawRectangle(int x, int y) {
-	int h = rand() % 50 + 1;
-	int w = rand() % 50 + 1;
-	LCD_FillRect(x, y, h, w);
-}
-/**
  * @brief  The application entry point.
  * @retval int
  */
@@ -101,16 +54,15 @@ int main(void)
 	/* Initialize all configured peripherals */
 	LCD_Init();
 	TS_Init(LCD_GetXSize(), LCD_GetYSize());
-	TS_Calibration();
+	//	TS_Calibration();
 
-	/* Clear the LCD */
+	/* Clear the LCD and display basic starter text*/
 	LCD_Clear(LCD_COLOR_BLACK);
 	LCD_SetTextColor(LCD_COLOR_YELLOW);
 	LCD_SetBackColor(LCD_COLOR_BLACK);
-	LCD_SetColors(LCD_COLOR_YELLOW, LCD_COLOR_BLACK); // TextColor, BackColor
 	LCD_SetFont(&Font20);
 	// There are 2 ways to print text to screen: using printf or LCD_ functions
-	LCD_DisplayStringAt(0, 0, "HTBLA Wels", CENTER_MODE);
+	LCD_DisplayStringAtLine(0, "   HTBLA Wels");
 	// printf Alternative
 	LCD_SetPrintPosition(1, 0);
 	printf(" Fischergasse 30");
@@ -121,53 +73,26 @@ int main(void)
 	LCD_SetColors(LCD_COLOR_MAGENTA, LCD_COLOR_BLACK); // TextColor, BackColor
 	LCD_DisplayStringAtLineMode(39, "copyright xyz", CENTER_MODE);
 
-
+	int cnt = 0;
 	/* Infinite loop */
 	while (1)
 	{
-		// TODO: check if touch has been pressed and draw a random shape
-		// circle, rectangle, triangle, line
+		//execute main loop every 100ms
+		HAL_Delay(100);
+
+		// display timer
+		cnt++;
+		LCD_SetFont(&Font20);
+		LCD_SetTextColor(LCD_COLOR_BLUE);
+		LCD_SetPrintPosition(5, 0);
+		printf("   Timer: %.1f", cnt/10.0);
+
+		// test touch interface
 		int x, y;
-		int drawShape = 0;
-		if (GetUserButtonPressed()) {
-			srand(HAL_GetTick());
-			x = rand() % 240 + 1;
-			y = rand() % 320 + 1;
-			drawShape = 1;
-			//LCD_SetPrintPosition(5, 0);
-			//printf("%i, %i", x, y);
-		}
-		if (GetTouchState(&x , &y) == 1) {
-			srand(HAL_GetTick());
-			drawShape = 1;
+		if (GetTouchState(&x, &y)) {
+			LCD_FillCircle(x, y, 5);
 		}
 
-		if (drawShape) {
-			drawShape = 0;
-			int c = rand() | 0xFF000000; // set alpha channel to FF
-			LCD_SetTextColor(c);
-			int s = rand() % 4;
-			switch (s) {
-			case 0:
-				drawLine(x, y);
-				break;
-			case 1:
-				drawCircle(x, y);
-				break;
-			case 2:
-				drawEllipse(x, y);
-				break;
-			case 3:
-				drawRectangle(x, y);
-				break;
-			}
-		}
-		// execute main loop every 100ms
-		//		HAL_Delay(100);
-		//		int x, y;
-		//		if (GetTouchState(&x, &y)) {
-		//			BSP_LCD_FillCircle(x, y, 5);
-		//		}
 
 	}
 }
