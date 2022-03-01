@@ -17,6 +17,7 @@
 #include "main.h"
 #include "stm32f429i_discovery_lcd.h"
 #include "stm32f429i_discovery_ts.h"
+#include "ts_calibration.h"
 
 /* Private includes ----------------------------------------------------------*/
 
@@ -31,11 +32,11 @@ static int GetUserButtonPressed(void);
 static int GetTouchState (int *xCoord, int *yCoord);
 
 /**
-  * @brief This function handles System tick timer.
-  */
+ * @brief This function handles System tick timer.
+ */
 void SysTick_Handler(void)
 {
-  HAL_IncTick();
+	HAL_IncTick();
 }
 
 /**
@@ -45,9 +46,9 @@ void SysTick_Handler(void)
  * @return none
  */
 static void drawLine(int x, int y) {
-  int x2 = rand() % 240 + 1;
-  int y2 = rand() % 320 + 1;
-  LCD_DrawLine(x, y, x2, y2);
+	int x2 = rand() % 240 + 1;
+	int y2 = rand() % 320 + 1;
+	LCD_DrawLine(x, y, x2, y2);
 
 }
 
@@ -58,8 +59,8 @@ static void drawLine(int x, int y) {
  * @return none
  */
 static void drawCircle(int x, int y) {
-  int r = rand() % 30 + 1;
-  LCD_DrawCircle(x, y, r);
+	int r = rand() % 30 + 1;
+	LCD_DrawCircle(x, y, r);
 }
 
 /**
@@ -69,9 +70,9 @@ static void drawCircle(int x, int y) {
  * @return none
  */
 static void drawEllipse(int x, int y) {
-  int r1 = rand() % 30 + 1;
-  int r2 = rand() % 30 + 1;
-  LCD_FillEllipse(x, y, r1, r2);
+	int r1 = rand() % 30 + 1;
+	int r2 = rand() % 30 + 1;
+	LCD_FillEllipse(x, y, r1, r2);
 }
 
 /**
@@ -81,9 +82,9 @@ static void drawEllipse(int x, int y) {
  * @return none
  */
 static void drawRectangle(int x, int y) {
-  int h = rand() % 50 + 1;
-  int w = rand() % 50 + 1;
-  LCD_FillRect(x, y, h, w);
+	int h = rand() % 50 + 1;
+	int w = rand() % 50 + 1;
+	LCD_FillRect(x, y, h, w);
 }
 /**
  * @brief  The application entry point.
@@ -100,7 +101,7 @@ int main(void)
 	/* Initialize all configured peripherals */
 	LCD_Init();
 	TS_Init(LCD_GetXSize(), LCD_GetYSize());
-//	Touchscreen_Calibration();
+	TS_Calibration();
 
 	/* Clear the LCD */
 	LCD_Clear(LCD_COLOR_BLACK);
@@ -124,49 +125,49 @@ int main(void)
 	/* Infinite loop */
 	while (1)
 	{
-	    // TODO: check if touch has been pressed and draw a random shape
-	    // circle, rectangle, triangle, line
-		  int x, y;
-		  int drawShape = 0;
-	    if (GetUserButtonPressed()) {
-	      srand(HAL_GetTick());
-	      x = rand() % 240 + 1;
-	      y = rand() % 320 + 1;
-	      drawShape = 1;
-	      //LCD_SetPrintPosition(5, 0);
-	      //printf("%i, %i", x, y);
-	    }
-	    if (GetTouchState(&x , &y) == 1) {
-	      srand(HAL_GetTick());
-	      drawShape = 1;
-	    }
+		// TODO: check if touch has been pressed and draw a random shape
+		// circle, rectangle, triangle, line
+		int x, y;
+		int drawShape = 0;
+		if (GetUserButtonPressed()) {
+			srand(HAL_GetTick());
+			x = rand() % 240 + 1;
+			y = rand() % 320 + 1;
+			drawShape = 1;
+			//LCD_SetPrintPosition(5, 0);
+			//printf("%i, %i", x, y);
+		}
+		if (GetTouchState(&x , &y) == 1) {
+			srand(HAL_GetTick());
+			drawShape = 1;
+		}
 
-	    if (drawShape) {
-	      drawShape = 0;
-	      int c = rand() | 0xFF000000; // set alpha channel to FF
-	      LCD_SetTextColor(c);
-	      int s = rand() % 4;
-	      switch (s) {
-	        case 0:
-	          drawLine(x, y);
-	          break;
-	        case 1:
-	          drawCircle(x, y);
-	          break;
-	        case 2:
-	          drawEllipse(x, y);
-	          break;
-	        case 3:
-	          drawRectangle(x, y);
-	          break;
-	      }
-	    }
+		if (drawShape) {
+			drawShape = 0;
+			int c = rand() | 0xFF000000; // set alpha channel to FF
+			LCD_SetTextColor(c);
+			int s = rand() % 4;
+			switch (s) {
+			case 0:
+				drawLine(x, y);
+				break;
+			case 1:
+				drawCircle(x, y);
+				break;
+			case 2:
+				drawEllipse(x, y);
+				break;
+			case 3:
+				drawRectangle(x, y);
+				break;
+			}
+		}
 		// execute main loop every 100ms
-//		HAL_Delay(100);
-//		int x, y;
-//		if (GetTouchState(&x, &y)) {
-//			BSP_LCD_FillCircle(x, y, 5);
-//		}
+		//		HAL_Delay(100);
+		//		int x, y;
+		//		if (GetTouchState(&x, &y)) {
+		//			BSP_LCD_FillCircle(x, y, 5);
+		//		}
 
 	}
 }
@@ -196,6 +197,10 @@ static int GetTouchState (int* xCoord, int* yCoord) {
 		*xCoord = TsState.X;
 		*yCoord = TsState.Y;
 		touchclick = 1;
+		if (TS_IsCalibrationDone()) {
+			*xCoord = TS_Calibration_GetX(*xCoord);
+			*yCoord = TS_Calibration_GetY(*yCoord);
+		}
 	}
 
 	return touchclick;
