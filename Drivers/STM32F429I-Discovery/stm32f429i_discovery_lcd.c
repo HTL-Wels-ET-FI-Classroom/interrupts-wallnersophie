@@ -226,6 +226,23 @@ uint8_t BSP_LCD_Init(void)
     /* Initialize the font */
     BSP_LCD_SetFont(&LCD_DEFAULT_FONT);
 
+	BSP_LCD_LayerDefaultInit(1, LCD_FRAME_BUFFER_LAYER1);
+	/* Set Foreground Layer */
+	BSP_LCD_SelectLayer(1);
+	/* Clear the LCD */
+	BSP_LCD_Clear(LCD_COLOR_WHITE);
+	BSP_LCD_SetColorKeying(1, LCD_COLOR_WHITE);
+	BSP_LCD_SetLayerVisible(1, DISABLE);
+
+	/* Layer1 Init */
+	BSP_LCD_LayerDefaultInit(0, LCD_FRAME_BUFFER_LAYER0);
+
+	/* Set Foreground Layer */
+	BSP_LCD_SelectLayer(0);
+
+	/* Enable The LCD */
+	BSP_LCD_DisplayOn();
+
   return LCD_OK;
 }  
 

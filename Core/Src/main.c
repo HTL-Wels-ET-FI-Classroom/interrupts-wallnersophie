@@ -5,7 +5,6 @@
  * @brief          : Main program body
  ******************************************************************************
  *
- * ToDo: Fix clock setup (use HSE)
  *
  ******************************************************************************
  */
@@ -27,9 +26,6 @@
 static void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 
-#define LCD_FRAME_BUFFER_LAYER0                  (LCD_FRAME_BUFFER+0x130000)
-#define LCD_FRAME_BUFFER_LAYER1                  LCD_FRAME_BUFFER
-#define CONVERTED_FRAME_BUFFER                   (LCD_FRAME_BUFFER+0x260000)
 /**
  * @brief  The application entry point.
  * @retval int
@@ -46,22 +42,6 @@ int main(void)
 	MX_GPIO_Init();
 
 	BSP_LCD_Init();
-	BSP_LCD_LayerDefaultInit(1, LCD_FRAME_BUFFER_LAYER1);
-	/* Set Foreground Layer */
-	BSP_LCD_SelectLayer(1);
-	/* Clear the LCD */
-	BSP_LCD_Clear(LCD_COLOR_WHITE);
-	BSP_LCD_SetColorKeying(1, LCD_COLOR_WHITE);
-	BSP_LCD_SetLayerVisible(1, DISABLE);
-
-	/* Layer1 Init */
-	BSP_LCD_LayerDefaultInit(0, LCD_FRAME_BUFFER_LAYER0);
-
-	/* Set Foreground Layer */
-	BSP_LCD_SelectLayer(0);
-
-	/* Enable The LCD */
-	BSP_LCD_DisplayOn();
 
 	/* Clear the LCD */
 	BSP_LCD_Clear(LCD_COLOR_WHITE);

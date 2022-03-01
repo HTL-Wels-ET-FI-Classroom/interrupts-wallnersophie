@@ -109,6 +109,10 @@ typedef enum
 #define MAX_LAYER_NUMBER       2
 #define LCD_FRAME_BUFFER       ((uint32_t)0xD0000000)
 #define BUFFER_OFFSET          ((uint32_t)0x50000) 
+#define LCD_FRAME_BUFFER_LAYER0                  (LCD_FRAME_BUFFER+0x130000)
+#define LCD_FRAME_BUFFER_LAYER1                  LCD_FRAME_BUFFER
+#define CONVERTED_FRAME_BUFFER                   (LCD_FRAME_BUFFER+0x260000)
+
 
 /** 
   * @brief  LCD color  
