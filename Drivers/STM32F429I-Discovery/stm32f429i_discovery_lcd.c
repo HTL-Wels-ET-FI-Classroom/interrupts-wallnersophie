@@ -241,12 +241,12 @@ uint8_t LCD_Init(void)
 
 	/* Set Foreground Layer */
 	LCD_SelectLayer(0);
+	LCD_Clear(LCD_COLOR_WHITE);
 
 	/* Enable The LCD */
 	LCD_DisplayOn();
 	// no buffering
 	setvbuf(stdout, NULL, _IONBF, 0);
-
 
   return LCD_OK;
 }  

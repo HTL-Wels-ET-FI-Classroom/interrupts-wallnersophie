@@ -38,6 +38,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f429i_discovery_ts.h"
 #include "stm32f429i_discovery_io.h"
+#include "stm32f429i_discovery_lcd.h"
 
 /** @addtogroup BSP
   * @{
@@ -121,6 +122,16 @@ uint8_t TS_Init(uint16_t XSize, uint16_t YSize)
     /* Initialize the LL TS Driver */
     TsDrv->Init(TS_I2C_ADDRESS);
     TsDrv->Start(TS_I2C_ADDRESS);
+  }
+  else
+  {
+	    LCD_Clear(LCD_COLOR_RED);
+	    LCD_SetTextColor(LCD_COLOR_BLACK);
+	    LCD_SetFont(&Font20);
+	    LCD_DisplayStringAtLine(6,"  TOUCH NOT OK      ");
+	    LCD_DisplayStringAtLine(7,"Unplug the board   ");
+	    LCD_DisplayStringAtLine(8,"and try again     ");
+	    while(1);
   }
 
   return ret;
