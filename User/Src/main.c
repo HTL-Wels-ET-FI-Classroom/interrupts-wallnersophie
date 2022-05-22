@@ -1,14 +1,12 @@
-/* USER CODE BEGIN Header */
 /**
  ******************************************************************************
  * @file           : main.c
  * @brief          : Main program body
  ******************************************************************************
- *
+ * Description of project
  *
  ******************************************************************************
  */
-/* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
 #include <stdio.h>
@@ -51,17 +49,18 @@ int main(void)
 	/* Configure the system clock */
 	SystemClock_Config();
 
-	/* Initialize all configured peripherals */
+	/* Initialize LCD and touch screen */
 	LCD_Init();
 	TS_Init(LCD_GetXSize(), LCD_GetYSize());
+	/* touch screen calibration */
 	//	TS_Calibration();
 
-	/* Clear the LCD and display basic starter text*/
+	/* Clear the LCD and display basic starter text */
 	LCD_Clear(LCD_COLOR_BLACK);
 	LCD_SetTextColor(LCD_COLOR_YELLOW);
 	LCD_SetBackColor(LCD_COLOR_BLACK);
 	LCD_SetFont(&Font20);
-	// There are 2 ways to print text to screen: using printf or LCD_ functions
+	// There are 2 ways to print text to screen: using printf or LCD_* functions
 	LCD_DisplayStringAtLine(0, "   HTBLA Wels");
 	// printf Alternative
 	LCD_SetPrintPosition(1, 0);
@@ -100,7 +99,7 @@ int main(void)
 /**
  * Check if User Button has been pressed
  * @param none
- * @return 1 if rising edge has been detected
+ * @return 1 if user button input (PA0) is high
  */
 static int GetUserButtonPressed(void) {
 	return (GPIOA->IDR & 0x0001);
