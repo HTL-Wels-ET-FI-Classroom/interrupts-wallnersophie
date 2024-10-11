@@ -24,7 +24,7 @@
 /* Private define ------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-
+static volatile int cntInterrupt;
 /* Private function prototypes -----------------------------------------------*/
 static int GetUserButtonPressed(void);
 static int GetTouchState (int *xCoord, int *yCoord);
@@ -36,6 +36,14 @@ void SysTick_Handler(void)
 {
 	HAL_IncTick();
 }
+
+void EXTI0_IRQHandler(void){
+	__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_0);
+
+	cntInterrupt ++;
+
+}
+
 
 /**
  * @brief  The application entry point.
@@ -70,27 +78,49 @@ int main(void)
 
 	LCD_SetFont(&Font8);
 	LCD_SetColors(LCD_COLOR_MAGENTA, LCD_COLOR_BLACK); // TextColor, BackColor
-	LCD_DisplayStringAtLineMode(39, "copyright xyz", CENTER_MODE);
+	LCD_DisplayStringAtLineMode(39, "Sophie Wallner", CENTER_MODE);
 
-	int cnt = 0;
+
+	GPIO_InitTypeDef pa0;
+
+	pa0.Mode = GPIO_MODE_IT_RISING;
+	pa0.Alternate = 0;
+	pa0.Pin = GPIO_PIN_0;
+	pa0.Pull = GPIO_NOPULL;
+	pa0.Speed = GPIO_SPEED_FAST;
+
+	HAL_GPIO_Init(GPIOA, &pa0);
+
+	HAL_NVIC_EnableIRQ( EXTI0_IRQn);
+
+
+
+	int cnt1 = 0;
+	int cnt2 = 0;
 	/* Infinite loop */
 	while (1)
 	{
 		//execute main loop every 100ms
 		HAL_Delay(100);
 
-		// display timer
-		cnt++;
+
+		if(cntInterrupt % 2 == 0){
+			cnt1++;
+		}
+
+		if(cntInterrupt % 2 == 1){
+			cnt2++;
+		}
+
 		LCD_SetFont(&Font20);
 		LCD_SetTextColor(LCD_COLOR_BLUE);
 		LCD_SetPrintPosition(5, 0);
-		printf("   Timer: %.1f", cnt/10.0);
+		printf("   Timer: %.1f", cnt1/10.0);
 
-		// test touch interface
-		int x, y;
-		if (GetTouchState(&x, &y)) {
-			LCD_FillCircle(x, y, 5);
-		}
+		LCD_SetFont(&Font20);
+		LCD_SetTextColor(LCD_COLOR_BLUE);
+		LCD_SetPrintPosition(7, 0);
+		printf("   Timer: %.1f", cnt2/10.0);
 
 
 	}
