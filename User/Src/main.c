@@ -25,6 +25,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 static volatile int cntInterrupt;
+static volatile int cntColourSwitch;
 /* Private function prototypes -----------------------------------------------*/
 static int GetUserButtonPressed(void);
 static int GetTouchState (int *xCoord, int *yCoord);
@@ -39,9 +40,11 @@ void SysTick_Handler(void)
 
 void EXTI0_IRQHandler(void){
 	__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_0);
-
 	cntInterrupt ++;
-
+}
+void EXTI2_IRQHandler(void){
+	__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_2);
+	cntColourSwitch ++;
 }
 
 
@@ -75,6 +78,8 @@ int main(void)
 	printf(" Fischergasse 30");
 	LCD_SetPrintPosition(2, 0);
 	printf("   A-4600 Wels");
+	LCD_SetPrintPosition(3, 0);
+	printf("EXTI Interrupt");
 
 	LCD_SetFont(&Font8);
 	LCD_SetColors(LCD_COLOR_MAGENTA, LCD_COLOR_BLACK); // TextColor, BackColor
@@ -82,6 +87,8 @@ int main(void)
 
 
 	GPIO_InitTypeDef pa0;
+	GPIO_InitTypeDef pg2;
+
 
 	pa0.Mode = GPIO_MODE_IT_RISING;
 	pa0.Alternate = 0;
@@ -89,9 +96,17 @@ int main(void)
 	pa0.Pull = GPIO_NOPULL;
 	pa0.Speed = GPIO_SPEED_FAST;
 
-	HAL_GPIO_Init(GPIOA, &pa0);
+	pg2.Mode = GPIO_MODE_IT_RISING;
+	pg2.Alternate = 0;
+	pg2.Pin = GPIO_PIN_2;
+	pg2.Pull = GPIO_NOPULL;
+	pg2.Speed = GPIO_SPEED_FAST;
 
-	HAL_NVIC_EnableIRQ( EXTI0_IRQn);
+	HAL_GPIO_Init(GPIOA, &pa0);
+	HAL_GPIO_Init(GPIOG, &pg2);
+
+	HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+	HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
 
 
@@ -101,7 +116,7 @@ int main(void)
 	while (1)
 	{
 		//execute main loop every 100ms
-		HAL_Delay(100);
+		HAL_Delay(1);
 
 
 		if(cntInterrupt % 2 == 0){
@@ -112,15 +127,21 @@ int main(void)
 			cnt2++;
 		}
 
-		LCD_SetFont(&Font20);
-		LCD_SetTextColor(LCD_COLOR_BLUE);
-		LCD_SetPrintPosition(5, 0);
-		printf("   Timer: %.1f", cnt1/10.0);
+		if(cntColourSwitch % 2 == 0){
+			LCD_SetTextColor(LCD_COLOR_BLUE);
+		}
+		if(cntColourSwitch % 2 == 1){
+			LCD_SetTextColor(LCD_COLOR_GREEN);
+		}
+
 
 		LCD_SetFont(&Font20);
-		LCD_SetTextColor(LCD_COLOR_BLUE);
+
+		LCD_SetPrintPosition(5, 0);
+		printf("   Timer: %.1f", cnt1/100.0);
+
 		LCD_SetPrintPosition(7, 0);
-		printf("   Timer: %.1f", cnt2/10.0);
+		printf("   Timer: %.1f", cnt2/100.0);
 
 
 	}
