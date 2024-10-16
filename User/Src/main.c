@@ -41,6 +41,7 @@ void SysTick_Handler(void)
 void EXTI0_IRQHandler(void){
 	__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_0);
 	cntInterrupt ++;
+	HAL_GPIO_TogglePin(GPIOG, GPIO_PIN_13);
 }
 void EXTI2_IRQHandler(void){
 	__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_2);
@@ -78,6 +79,7 @@ int main(void)
 	printf(" Fischergasse 30");
 	LCD_SetPrintPosition(2, 0);
 	printf("   A-4600 Wels");
+	LCD_SetTextColor(LCD_COLOR_RED);
 	LCD_SetPrintPosition(3, 0);
 	printf("EXTI Interrupt");
 
@@ -88,6 +90,7 @@ int main(void)
 
 	GPIO_InitTypeDef pa0;
 	GPIO_InitTypeDef pg2;
+	GPIO_InitTypeDef pg13;
 
 
 	pa0.Mode = GPIO_MODE_IT_RISING;
@@ -102,8 +105,15 @@ int main(void)
 	pg2.Pull = GPIO_NOPULL;
 	pg2.Speed = GPIO_SPEED_FAST;
 
+	pg13.Mode = GPIO_MODE_OUTPUT_PP;
+	pg13.Alternate = 0;
+	pg13.Pin = GPIO_PIN_13;
+	pg13.Pull = GPIO_NOPULL;
+	pg13.Speed = GPIO_SPEED_FAST;
+
 	HAL_GPIO_Init(GPIOA, &pa0);
 	HAL_GPIO_Init(GPIOG, &pg2);
+	HAL_GPIO_Init(GPIOG, &pg13);
 
 	HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 	HAL_NVIC_EnableIRQ(EXTI2_IRQn);
@@ -119,6 +129,7 @@ int main(void)
 		HAL_Delay(1);
 
 
+		// Abfrage welcher Timer laufen soll und welcher cnt hochgezählt wird.
 		if(cntInterrupt % 2 == 0){
 			cnt1++;
 		}
@@ -127,6 +138,7 @@ int main(void)
 			cnt2++;
 		}
 
+		// Abfrage welche Farbe und setzen der Farbe
 		if(cntColourSwitch % 2 == 0){
 			LCD_SetTextColor(LCD_COLOR_BLUE);
 		}
@@ -135,8 +147,8 @@ int main(void)
 		}
 
 
+		// Ausgabe Timer
 		LCD_SetFont(&Font20);
-
 		LCD_SetPrintPosition(5, 0);
 		printf("   Timer: %.1f", cnt1/100.0);
 
