@@ -26,6 +26,8 @@
 /* Private variables ---------------------------------------------------------*/
 static volatile int cntInterrupt;
 static volatile int cntColourSwitch;
+int cnt1 = 0;
+int cnt2 = 0;
 /* Private function prototypes -----------------------------------------------*/
 static int GetUserButtonPressed(void);
 static int GetTouchState (int *xCoord, int *yCoord);
@@ -36,6 +38,15 @@ static int GetTouchState (int *xCoord, int *yCoord);
 void SysTick_Handler(void)
 {
 	HAL_IncTick();
+
+	// Abfrage welcher Timer laufen soll und welcher cnt somit hochgezählt wird.
+	if(cntInterrupt % 2 == 0){
+		cnt1++;
+	}
+	if(cntInterrupt % 2 == 1){
+		cnt2++;
+	}
+
 }
 
 void EXTI0_IRQHandler(void){
@@ -66,7 +77,6 @@ int main(void)
 	TS_Init(LCD_GetXSize(), LCD_GetYSize());
 	/* touch screen calibration */
 	//	TS_Calibration();
-
 	/* Clear the LCD and display basic starter text */
 	LCD_Clear(LCD_COLOR_BLACK);
 	LCD_SetTextColor(LCD_COLOR_YELLOW);
@@ -79,6 +89,7 @@ int main(void)
 	printf(" Fischergasse 30");
 	LCD_SetPrintPosition(2, 0);
 	printf("   A-4600 Wels");
+
 	LCD_SetTextColor(LCD_COLOR_RED);
 	LCD_SetPrintPosition(3, 0);
 	printf("EXTI Interrupt");
@@ -91,7 +102,6 @@ int main(void)
 	GPIO_InitTypeDef pa0;
 	GPIO_InitTypeDef pg2;
 	GPIO_InitTypeDef pg13;
-
 
 	pa0.Mode = GPIO_MODE_IT_RISING;
 	pa0.Alternate = 0;
@@ -118,25 +128,14 @@ int main(void)
 	HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 	HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
+	float time1;
+	float time2;
 
-
-	int cnt1 = 0;
-	int cnt2 = 0;
 	/* Infinite loop */
 	while (1)
 	{
 		//execute main loop every 100ms
 		HAL_Delay(1);
-
-
-		// Abfrage welcher Timer laufen soll und welcher cnt hochgezählt wird.
-		if(cntInterrupt % 2 == 0){
-			cnt1++;
-		}
-
-		if(cntInterrupt % 2 == 1){
-			cnt2++;
-		}
 
 		// Abfrage welche Farbe und setzen der Farbe
 		if(cntColourSwitch % 2 == 0){
@@ -146,14 +145,23 @@ int main(void)
 			LCD_SetTextColor(LCD_COLOR_GREEN);
 		}
 
+		/*
+		 * Würde man den cnt für die Timer hier erhöhen, dann stimmt die Zeit
+		 * aufgrund von Verzögerungen durch den Pogrammzyklus nicht
+		 * Der SysTick Handler wird genau jede ms aufgerufen und eignet sich daher gut für die Erhöhnug des cnt
+		 */
 
-		// Ausgabe Timer
+		// Berechnung Zeit am Timer
+		time1 = cnt1/1000.0;
+		time2 = cnt2/1000.0;
+
+		// Ausgabe Timer am Display
 		LCD_SetFont(&Font20);
 		LCD_SetPrintPosition(5, 0);
-		printf("   Timer: %.1f", cnt1/100.0);
+		printf("   Timer: %.1f", time1);
 
 		LCD_SetPrintPosition(7, 0);
-		printf("   Timer: %.1f", cnt2/100.0);
+		printf("   Timer: %.1f", time2);
 
 
 	}
