@@ -26,8 +26,8 @@
 /* Private variables ---------------------------------------------------------*/
 static volatile int cntInterrupt;
 static volatile int cntColourSwitch;
-int cnt1 = 0;
-int cnt2 = 0;
+volatile int cnt1 = 0;
+volatile int cnt2 = 0;
 /* Private function prototypes -----------------------------------------------*/
 static int GetUserButtonPressed(void);
 static int GetTouchState (int *xCoord, int *yCoord);
@@ -158,10 +158,10 @@ int main(void)
 		// Ausgabe Timer am Display
 		LCD_SetFont(&Font20);
 		LCD_SetPrintPosition(5, 0);
-		printf("   Timer: %.1f", time1);
+		printf("   Timer: %.2f", time1);
 
 		LCD_SetPrintPosition(7, 0);
-		printf("   Timer: %.1f", time2);
+		printf("   Timer: %.2f", time2);
 
 
 	}
