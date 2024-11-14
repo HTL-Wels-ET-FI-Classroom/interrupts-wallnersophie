@@ -106,13 +106,13 @@ int main(void)
 	pa0.Mode = GPIO_MODE_IT_RISING;
 	pa0.Alternate = 0;
 	pa0.Pin = GPIO_PIN_0;
-	pa0.Pull = GPIO_NOPULL;
+	pa0.Pull = GPIO_PULLDOWN;
 	pa0.Speed = GPIO_SPEED_FAST;
 
 	pg2.Mode = GPIO_MODE_IT_RISING;
 	pg2.Alternate = 0;
 	pg2.Pin = GPIO_PIN_2;
-	pg2.Pull = GPIO_NOPULL;
+	pg2.Pull = GPIO_PULLDOWN;
 	pg2.Speed = GPIO_SPEED_FAST;
 
 	pg13.Mode = GPIO_MODE_OUTPUT_PP;
